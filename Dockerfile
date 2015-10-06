@@ -1,5 +1,7 @@
+# This docker image based on tutum/postgresql
+
 FROM ubuntu:trusty
-MAINTAINER FENG, HONGLIN <hfeng@tutum.co>
+MAINTAINER Ganduruu.B <mr.jojo8@gmail.com>
 
 #Install PostgreSQL-9.3
 RUN apt-get update && \
