@@ -1,27 +1,23 @@
-# This docker image based on orchardup/postgresql
+FROM ubuntu:trusty
+MAINTAINER FENG, HONGLIN <hfeng@tutum.co>
 
-FROM ubuntu:14.04
-MAINTAINER Ganduruu.B "mr.jojo8@gmail.com"
+#Install PostgreSQL-9.3
+RUN apt-get update && \
+    apt-get install -y postgresql-9.3 pwgen && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN locale-gen en_US.UTF-8
-RUN update-locale LANG=en_US.UTF-8
+# Adjust PostgreSQL configuration so that remote connections to the database are possible. 
+RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.conf
+RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
 
-RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get install -y -q postgresql-9.3 postgresql-contrib-9.3 postgresql-9.3-postgis-2.1 libpq-dev sudo
 
-# /etc/ssl/private can't be accessed from within container for some reason
-RUN mkdir /etc/ssl/private-copy; mv /etc/ssl/private/* /etc/ssl/private-copy/; rm -r /etc/ssl/private; mv /etc/ssl/private-copy /etc/ssl/private; chmod -R 0700 /etc/ssl/private; chown -R postgres /etc/ssl/private
+# Add VOLUMEs to allow backup of config, logs and databases
+VOLUME	["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
-ADD postgresql.conf /etc/postgresql/9.3/main/postgresql.conf
-ADD pg_hba.conf /etc/postgresql/9.3/main/pg_hba.conf
-
-RUN chown postgres:postgres /etc/postgresql/9.3/main/*.conf
-
-ADD run /usr/local/bin/run
-
-RUN chmod +x /usr/local/bin/run
-
-VOLUME ["/var/lib/postgresql"]
+ADD modify_postgres_pass.sh ./modify_postgres_pass.sh
+ADD run.sh /run.sh
+RUN chmod 755 /*.sh
 
 EXPOSE 5432
-
-CMD ["/usr/local/bin/run"]
+CMD ["/run.sh"]
